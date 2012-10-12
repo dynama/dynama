@@ -2,3 +2,5 @@ dynama
 ======
 
 dynama
+
+first commit
