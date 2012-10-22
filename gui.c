@@ -1,142 +1,91 @@
+#include <stdlib.h>
 #include <gtk/gtk.h>
-#include <strings.h>
 
-/* Obligatory basic callback */
-static void print_new(GtkWidget *w, gpointer data)
+static void helloWorld (GtkWidget *wid, GtkWidget *win)
+
 {
-    g_message("File --> New pressed");
+  GtkWidget *dialog = NULL;
+
+  dialog = gtk_message_dialog_new (GTK_WINDOW (win), GTK_DIALOG_MODAL, GTK_MESSAGE_INFO, GTK_BUTTONS_CLOSE, "Hello World!");
+  gtk_window_set_position (GTK_WINDOW (dialog), GTK_WIN_POS_CENTER);
+  gtk_dialog_run (GTK_DIALOG (dialog));
+  gtk_widget_destroy (dialog);
 }
 
-static void print_open(GtkWidget *w, gpointer data)
+static void menuitem_response(gchar *);
+
+int main (int argc, char *argv[])
 {
-    g_message("File --> Open pressed");
-}
+  GtkWidget *button = NULL;
+  GtkWidget *win = NULL;
+  GtkWidget *vbox = NULL;
+  GtkWidget *file_menu = NULL;
+  GtkWidget *open_item;
+  GtkWidget *save_item;
+  GtkWidget *quit_item;
+  GtkWidget *menu_bar;
+  GtkWidget *file_item;
 
-static void print_save(GtkWidget *w, gpointer data)
-{
-    g_message("File --> Save pressed");
-}
-
-static void print_save_as(GtkWidget *w, gpointer data)
-{
-    g_message("File --> Save As pressed");
-}
-
-static void print_options(GtkWidget *w, gpointer data)
-{
-    g_message("Options --> Test Selected");
-}
-
-static void print_help(GtkWidget *w, gpointer data)
-{
-    g_message("Help --> About Selected");
-}
-
-
-/* This is the GtkItemFactoryEntry structure used to generate new menus.
-   Item 1: The menu path. The letter after the underscore indicates an
-           accelerator key once the menu is open.
-   Item 2: The accelerator key for the entry
-   Item 3: The callback function.
-   Item 4: The callback action.  This changes the parameters with
-           which the function is called.  The default is 0.
-   Item 5: The item type, used to define what kind of an item it is.
-           Here are the possible values:
-
-           NULL               -> "<Item>"
-           ""                 -> "<Item>"
-           "<Title>"          -> create a title item
-           "<Item>"           -> create a simple item
-           "<CheckItem>"      -> create a check item
-           "<ToggleItem>"     -> create a toggle item
-           "<RadioItem>"      -> create a radio item
-           <path>             -> path of a radio item to link against
-           "<Separator>"      -> create a separator
-           "<Branch>"         -> create an item to hold sub items (optional)
-           "<LastBranch>"     -> create a right justified branch
-*/
-
-static GtkItemFactoryEntry menu_items[] = {
-
-  { "/_File",         NULL,         NULL, 0, "<Branch>" },
-  { "/File/_New",     "<control>N", print_new, 0, NULL },
-  { "/File/_Open",    "<control>O", print_open, 0, NULL },
-  { "/File/_Save",    "<control>S", print_save, 0, NULL },
-  { "/File/Save _As", NULL,         print_save_as, 0, NULL },
-  { "/File/sep1",     NULL,         NULL, 0, "<Separator>" },
-  { "/File/Quit",     "<control>Q", gtk_main_quit, 0, NULL },
-
-  { "/Configurations", NULL,       NULL, 0, "<Branch>"},
-  { "/Configurations/Import", NULL , NULL, 0, NULL       },
-
-  { "/_Options",      NULL,         NULL, 0, "<Branch>" },
-  { "/Options/Test",  NULL,         print_options, 0, NULL },
-  { "/_Help",         NULL,         NULL, 0, "<LastBranch>" },
-  { "/_Help/About",   NULL,         print_help, 0, NULL },
-
-};
-
-
-void get_main_menu( GtkWidget  *window,
-                    GtkWidget **menubar )
-{
-  GtkItemFactory *item_factory;
-  GtkAccelGroup *accel_group;
-  gint nmenu_items = sizeof (menu_items) / sizeof (menu_items[0]);
-
-  accel_group = gtk_accel_group_new ();
-
-  /* This function initializes the item factory.
-     Param 1: The type of menu - can be GTK_TYPE_MENU_BAR, GTK_TYPE_MENU,
-              or GTK_TYPE_OPTION_MENU.
-     Param 2: The path of the menu.
-     Param 3: A pointer to a gtk_accel_group.  The item factory sets up
-              the accelerator table while generating menus.
-  */
-
-  item_factory = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>",
-                                       accel_group);
-
-  /* This function generates the menu items. Pass the item factory,
-     the number of items in the array, the array itself, and any
-     callback data for the the menu items. */
-  gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, NULL);
-
-  /* Attach the new accelerator group to the window. */
-  gtk_window_add_accel_group (GTK_WINDOW (window), accel_group);
-
-  if (menubar)
-    /* Finally, return the actual menu bar created by the item factory. */
-    *menubar = gtk_item_factory_get_widget (item_factory, "<main>");
-}
-
-int main( int argc,
-          char *argv[] )
-{
-  GtkWidget *window;
-  GtkWidget *main_vbox;
-  GtkWidget *menubar;
-
+  /* Initialize GTK+ */
+  g_log_set_handler ("Gtk", G_LOG_LEVEL_WARNING, (GLogFunc) gtk_false, NULL);
   gtk_init (&argc, &argv);
+  g_log_set_handler ("Gtk", G_LOG_LEVEL_WARNING, g_log_default_handler, NULL);
 
-  window = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-  gtk_signal_connect (GTK_OBJECT (window), "destroy",
-                      GTK_SIGNAL_FUNC (gtk_main_quit),
-                      "WM destroy");
-  gtk_window_set_title (GTK_WINDOW(window), "Zombie Watch");
-  gtk_widget_set_usize (GTK_WIDGET(window), 300, 200);
+  /* Create the main window */
+  win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
+  gtk_container_set_border_width (GTK_CONTAINER (win), 16);
+  gtk_window_set_title (GTK_WINDOW (win), "Hello World");
+  gtk_window_set_position (GTK_WINDOW (win), GTK_WIN_POS_CENTER);
+  gtk_widget_realize (win);
+  g_signal_connect (win, "destroy", gtk_main_quit, NULL);
 
-  main_vbox = gtk_vbox_new (FALSE, 1);
-  gtk_container_border_width (GTK_CONTAINER (main_vbox), 1);
-  gtk_container_add (GTK_CONTAINER (window), main_vbox);
-  gtk_widget_show (main_vbox);
+  /*Create the menu*/
+  file_menu = gtk_menu_new();
 
-  get_main_menu (window, &menubar);
-  gtk_box_pack_start (GTK_BOX (main_vbox), menubar, FALSE, TRUE, 0);
-  gtk_widget_show (menubar);
+  open_item = gtk_menu_item_new_with_label("Open");
+  save_item = gtk_menu_item_new_with_label("Save");
+  quit_item = gtk_menu_item_new_with_label("Quit");
+  gtk_menu_shell_append (GTK_MENU_SHELL (file_menu), open_item);
+  gtk_menu_shell_append (GTK_MENU_SHELL (file_menu), save_item);
+  gtk_menu_shell_append (GTK_MENU_SHELL (file_menu), quit_item);
+  g_signal_connect_swapped(open_item, "activate", G_CALLBACK(menuitem_response), (gpointer) "file.open");
+  g_signal_connect_swapped(save_item, "activate", G_CALLBACK(menuitem_response), (gpointer) "file.save");
+  g_signal_connect_swapped(quit_item, "activate", G_CALLBACK(menuitem_response), (gpointer) "file.quit");
+  gtk_widget_show(open_item);
+  gtk_widget_show(save_item);
+  gtk_widget_show(quit_item);
 
-  gtk_widget_show (window);
+  /*Create the menu bar and contain menu items*/
+
+  menu_bar = gtk_menu_bar_new();
+  gtk_container_add(GKT_CONTAINER(win), menu_bar);
+  gtk_widget_show(menu_bar);
+  file_item = gtk_menu_item_new_with_label("File");
+  gtk_widget_show(file_item);
+
+  /*Connect the file menu to the file item*/
+  gtk_menu_item_set_submenu(GTK_MENU_ITEM(file_item), file_menu);
+
+  /*Connect the file menu to the menu bar*/
+  gtk_menu_bar_append (GTK_MENU_BAR (menu_bar), file_item);
+
+  g_signal_connect_swapped (widget, "event", G_CALLBACK (handler), menu);
+
+  /* Create a vertical box with buttons */
+  vbox = gtk_vbox_new (TRUE, 6);
+  gtk_container_add (GTK_CONTAINER (win), vbox);
+
+  button = gtk_button_new_from_stock (GTK_STOCK_DIALOG_INFO);
+  g_signal_connect (G_OBJECT (button), "clicked", G_CALLBACK (helloWorld), (gpointer) win);
+  gtk_box_pack_start (GTK_BOX (vbox), button, TRUE, TRUE, 0);
+
+  button = gtk_button_new_from_stock (GTK_STOCK_CLOSE);
+  g_signal_connect (button, "clicked", gtk_main_quit, NULL);
+  gtk_box_pack_start (GTK_BOX (vbox), button, TRUE, TRUE, 0);
+
+  /* Enter the main loop */
+  gtk_widget_show_all (win);
   gtk_main ();
+  return 0;
 
-  return(0);
 }
