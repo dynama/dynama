@@ -1,25 +1,17 @@
-IDIR=../include
-CC=gcc
-CFLAGS=-I$(IDIR)
+zombie_watch: sniffer.o parser.o
+	gcc -o zombie_watch parser.o sniffer.o -I. -lpcap 
 
-ODIR=obj
-LDIR=../lib
+sniffer.o: sniffer.c
+	gcc -c sniffer.c
 
-LIBS=-lm
-
-_DEPS = sniffer.h
-DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
-
-_OBJ = sniffer.o parser.o
-OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
-
-$(ODIR)/%.o: %.c $(DEPS)
-	$(CC) -c -o $@ $< $(CFLAGS)
-
-zombiewatch: $(OBJ)
-	gcc -o $@ $^ $(CFLAGS) $(LIBS)
-
-.PHONY: clean
+parser.o: parser.c
+	gcc -c parser.c
 
 clean:
-	rm -f $(ODIR)/*.o *~ core $(INCDIR)/*~
+	-rm -f *.o
+	-rm -f sniffer
+	-rm -f parser	
+
+
+
+
