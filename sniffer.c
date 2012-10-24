@@ -15,6 +15,7 @@
 #include<netinet/ip.h>    //Provides declarations for ip header
  
 #include "parser.h" // provides the log file setup and the packet parser
+#include "database.h" // provide the function to check to see if a database exists and set one up if not
  
 //FILE *logfile;
 //struct sockaddr_in source,dest;
@@ -24,6 +25,7 @@ int main()
 {
     pcap_if_t *alldevsp , *device;
     pcap_t *handle; //Handle of the device that shall be sniffed
+    char* databaseName = "database.db";
  
     char errbuf[100] , *devname , devs[100][100];
     int count = 1 , n;
@@ -66,7 +68,15 @@ int main()
     printf("Done\n");
      
     setup_log();
+
+    if(setup_database(databaseName)){
+        printf("Database file exists.\n");
+    }
+    else {
+        printf("No database file exists.\n");
+    }
      
+
     //Put the device in sniff loop
     pcap_loop(handle , -1 , process_packet , NULL);
      
