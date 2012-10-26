@@ -1,24 +1,17 @@
+CC=gcc
 HEADERS = $(wildcard *.h)
 OBJECTS = $(patsubst %.c, %.o, $(wildcard *.c))
+TAGS = -I. -lpcap -lsqlite3
 
 
 zombie_watch: $(OBJECTS)
-	gcc -o zombie_watch $(OBJECTS) -I. -lpcap -lsqlite3
+	$(CC) -o zombie_watch $(OBJECTS) $(TAGS)
 
-sniffer.o: sniffer.c
-	gcc -c sniffer.c
+%.o: %.c
+	$(CC) -c $^
 
-parser.o: parser.c
-	gcc -c parser.c
-
-database.o: database.c
-	gcc -c database.c 
+.PHONY: clean
 
 clean:
-	-rm -f *.o
-	-rm -f sniffer
-	-rm -f parser	
-
-
-
+	-rm -f *.o *~ core *.core 
 
