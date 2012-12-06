@@ -1,5 +1,8 @@
 /*
     Packet sniffer using libpcap library
+
+    // Modified from http://www.binarytides.com/packet-sniffer-code-c-libpcap-linux-sockets/
+
 */
 #include<pcap.h>
 #include<stdio.h>
@@ -10,7 +13,7 @@
 #include<arpa/inet.h> // for inet_ntoa()
 #include<net/ethernet.h>
 #include<netinet/ip_icmp.h>   //Provides declarations for icmp header
-#include<netinet/udp.h>   //Provides declarations for udp header
+//#include<netinet/udp.h>   //Provides declarations for udp header
 #include<netinet/tcp.h>   //Provides declarations for tcp header
 #include<netinet/ip.h>    //Provides declarations for ip header
  
@@ -25,7 +28,7 @@ int main()
 {
     pcap_if_t *alldevsp , *device;
     pcap_t *handle; //Handle of the device that shall be sniffed
-    char* databaseName = "database.db";
+    char* databaseName = "database.sqlite3";
  
     char errbuf[100] , *devname , devs[100][100];
     int count = 1 , n;
@@ -46,7 +49,7 @@ int main()
         printf("%d. %s - %s\n" , count , device->name , device->description);
         if(device->name != NULL)
         {
-            strcpy(devs[count] , device->name);
+            strncpy(devs[count] , device->name, 16);
         }
         count++;
     }
@@ -70,7 +73,7 @@ int main()
     setup_log();
 
     if(setup_database(databaseName)){
-        printf("Database file exists.\n");
+        printf("Database is setup.\n");
     }
     else {
         printf("No database file exists.\n");

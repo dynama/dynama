@@ -1,3 +1,5 @@
+// Modified from http://www.binarytides.com/packet-sniffer-code-c-libpcap-linux-sockets/
+
 #include<pcap.h>
 #include<stdio.h>
 #include<stdlib.h> // for exit()
@@ -7,11 +9,13 @@
 #include<arpa/inet.h> // for inet_ntoa()
 #include<net/ethernet.h>
 #include<netinet/ip_icmp.h>   //Provides declarations for icmp header
-#include<netinet/udp.h>   //Provides declarations for udp header
 #include<netinet/tcp.h>   //Provides declarations for tcp header
 #include<netinet/ip.h>    //Provides declarations for ip header
 
+
 #include "database.h"  // include the functions to add packets to the SQLlite database
+//#include "dnsstructs.h"
+//#include "dnsparser.h"
 
 void process_packet(u_char *, const struct pcap_pkthdr *, const u_char *);
 void process_ip_packet(const u_char * , int);
@@ -67,7 +71,7 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
             ++others;
             break;
     }
-    printf("TCP : %d   UDP : %d   ICMP : %d   IGMP : %d   Others : %d   Total : %d\r", tcp , udp , icmp , igmp , others , total);
+     printf("TCP : %d   UDP : %d   ICMP : %d   IGMP : %d   Others : %d   Total : %d\r", tcp , udp , icmp , igmp , others , total);
 }
  
 void print_ethernet_header(const u_char *Buffer, int Size)
@@ -138,7 +142,7 @@ void print_tcp_packet(const u_char * Buffer, int Size)
     //fprintf(logfile , "   |-CWR Flag : %d\n",(unsigned int)tcph->cwr);
     //fprintf(logfile , "   |-ECN Flag : %d\n",(unsigned int)tcph->ece);
     fprintf(logfile , "   |-Urgent Flag          : %d\n",(unsigned int)tcph->urg);
-    fprintf(logfile , "   |-Acknowledgement Flag : %d\n",(unsigned int)tcph->ack);
+    fprintf(logfile , "   |-Acknowledgement Flag : %d\n",(unsigned int)000000000000000000000000000000000000                                                                                                                                                                                                                                                                        );
     fprintf(logfile , "   |-Push Flag            : %d\n",(unsigned int)tcph->psh);
     fprintf(logfile , "   |-Reset Flag           : %d\n",(unsigned int)tcph->rst);
     fprintf(logfile , "   |-Synchronise Flag     : %d\n",(unsigned int)tcph->syn);
@@ -168,11 +172,12 @@ void print_udp_packet(const u_char *Buffer , int Size)
     unsigned short iphdrlen;
      
     struct iphdr *iph = (struct iphdr *)(Buffer +  sizeof(struct ethhdr));
-    iphdrlen = iph->ihl*4;
+    iphdrlen = (iph->ihl)*4;
      
     struct udphdr *udph = (struct udphdr*)(Buffer + iphdrlen  + sizeof(struct ethhdr));
-     
-    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof udph;
+    unsigned short ethhdrlen = sizeof(struct ethhdr);
+
+    int header_size =  sizeof(struct ethhdr) + iphdrlen + sizeof(struct udphdr);
      
     fprintf(logfile , "\n\n***********************UDP Packet*************************\n");
      
@@ -186,21 +191,42 @@ void print_udp_packet(const u_char *Buffer , int Size)
      
     fprintf(logfile , "\n");
     fprintf(logfile , "IP Header\n");
-    PrintData(Buffer , iphdrlen);
+    PrintData(Buffer + ethhdrlen , iphdrlen);
          
     fprintf(logfile , "UDP Header\n");
-    PrintData(Buffer+iphdrlen , sizeof udph);
+    PrintData(Buffer+iphdrlen + ethhdrlen , sizeof(struct udphdr));
          
     fprintf(logfile , "Data Payload\n");   
      
     //Move the pointer ahead and reduce the size of string
     PrintData(Buffer + header_size , Size - header_size);
 
-    if (ntohs(udph->source) == 53)
+    if (ntohs(udph->dest) == 53)
     {
         fprintf(logfile, "\n\nThis is a DNS Packet\n\n");
-        //printf("DNS packet found.\n");
-        //PrintDataToConsole(Buffer + header_size, Size - header_size);
+
+        struct dnsHdr *dnsh = (struct dnsHdr*)(Buffer + header_size);
+        
+        fprintf(logfile , "\nDNS Header\n");
+        fprintf(logfile , "   |-DNS ID                    : %d\n" , ntohs(dnsh->dns_id));
+        fprintf(logfile , "   |-DNS Query or Response     : %d\n" , dnsh->dns_qr);
+        fprintf(logfile , "   |-DNS OPCODE                : %d\n" , dnsh->dns_opcode);
+        fprintf(logfile , "   |-DNS Authoritiative Answer : %d\n" , dnsh->dns_aa);
+        fprintf(logfile , "   |-DNS Truncation            : %d\n" , dnsh->dns_tc);
+        fprintf(logfile , "   |-DNS Recursion Desired     : %d\n" , dnsh->dns_rd);
+        fprintf(logfile , "   |-DNS Recursion Available   : %d\n" , dnsh->dns_ra);
+        fprintf(logfile , "   |-DNS Z                     : %d\n" , dnsh->dns_z);
+        fprintf(logfile , "   |-DNS RCODE                 : %d\n" , dnsh->dns_rcode);
+        fprintf(logfile , "   |-DNS QDCOUNT               : %d\n" , ntohs(dnsh->dns_qdcount));
+        fprintf(logfile , "   |-DNS ANCOUNT               : %d\n" , ntohs(dnsh->dns_ancount));
+        fprintf(logfile , "   |-DNS NSCOUNT               : %d\n" , ntohs(dnsh->dns_nscount));
+        fprintf(logfile , "   |-DNS ARCOUNT               : %d\n" , ntohs(dnsh->dns_arcount));
+
+        // char *dnsName = parse_name(Buffer, Size, 0, 0);
+        // printf("%s", dnsName);
+
+        insertDnsPacket(dnsh, iph, udph);
+
     }
      
     fprintf(logfile , "\n###########################################################");
